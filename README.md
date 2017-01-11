@@ -19,3 +19,5 @@ Will output dist/out.html and dist/out.js which can be opened in a webbrowser
 ## Notes
 
 This can compile htsfile.c accurately, but it is not usable due to blocking sockets not being supported by emscripten (AFAIK)
+
+Compilation tested on Ubuntu and OSX
