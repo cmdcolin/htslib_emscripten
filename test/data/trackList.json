@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "tracks": [
+    {
+      "key": "Reference sequence",
+      "label": "DNA",
+      "category": "Reference sequence",
+      "seqType": "dna",
+      "urlTemplate": "seq/{refseq_dirpath}/{refseq}-",
+      "storeClass": "JBrowse/Store/Sequence/StaticChunked",
+      "type": "SequenceTrack",
+      "chunkSize": 20000
+    },
+    {
+        "type": "Alignments2",
+        "storeClass": "CramReader/Store/SeqFeature/CRAM",
+        "urlTemplate": "volvox.cram",
+        "label": "volvox.cram"
+    }
+  ],
+  "plugins": ["CramReader"],
+  "classicMenu": true
+}
