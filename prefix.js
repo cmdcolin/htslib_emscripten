@@ -1,2 +1,2 @@
-define([], {
+define([], function() {
     return function(Module) {

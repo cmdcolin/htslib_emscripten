@@ -41,7 +41,9 @@ return declare( null, {
         this.store = args.store;
         this.data  = args.data;
         this.crai   = args.crai;
-        console.log(Htslib)
+
+        // initialize module
+        Htslib(Module);
 
         this.chunkSizeLimit = args.chunkSizeLimit || 5000000;
     },
@@ -72,15 +74,22 @@ return declare( null, {
                 failCallback('Web browser does not support typed arrays');
                 return;
             }
-            ptr = allocate(intArrayFromString(someString), 'i8', ALLOC_NORMAL);
-            //_write_cram_header(ptr);
 
-            var uncba = new Uint8Array(header);
-            if( readInt(uncba, 0) != CRAI_MAGIC) {
-                dlog('Not a CRAI file');
-                failCallback('Not a CRAI file');
-                return;
+            var fp = Module.FS_createDataFile('/', 'cram.header',header, 1, 1, 1);
+            var ret = Module.ccall('hts_open', 'number', ['string', 'string'], ['/cram.header', 'rb']);
+            console.log(ret);
+            var header = Module.ccall('sam_hdr_read', 'number', ['number'], [ret]);
+            console.log(header);
+            var aln = Module.ccall('bam_init1', 'number', [], []);
+            console.log(aln);
+            if(Module.ccall('sam_read1', 'number', ['number','number','number'], [ret,header,aln])>=0) {
+                var v = Module.ccall('bam_aux_get', 'number', ['number','string','character'], [aln, "XA", 'A']);
+                console.log('v',v);
+                var x = Module.ccall('bam_aux2A','number',['number'],[v]);
+                console.log('x',x);
             }
+
+
 
             var nref = readInt(uncba, 4);
 

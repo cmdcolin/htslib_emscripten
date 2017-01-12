@@ -14,10 +14,10 @@ The htslib and zlib dependencies are available in this repo as git subtrees
 
     ./compiler.sh
 
-Will output dist/out.html and dist/out.js which can be opened in a webbrowser
+Will output js/Store/SeqFeature/CRAM/Htslib.js which can be used in javascript as in js/Store/SeqFeature/CRAM/File.js 
 
 ## Notes
 
-This can compile htsfile.c accurately, but it is not usable due to blocking sockets not being supported by emscripten (AFAIK)
-
 Compilation tested on Ubuntu and OSX
+
+This does not produce anything functional at the moment but demonstrates calling htslib functions from javascript
