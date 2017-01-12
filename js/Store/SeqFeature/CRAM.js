@@ -1,4 +1,4 @@
-define( [
+define([
     'dojo/_base/declare',
     'dojo/_base/array',
     'dojo/_base/Deferred',
@@ -12,7 +12,7 @@ define( [
     'JBrowse/Store/SeqFeature/GlobalStatsEstimationMixin',
     './CRAM/File'
 ],
-function(
+function (
     declare,
     array,
     Deferred,
@@ -26,8 +26,8 @@ function(
     GlobalStatsEstimationMixin,
     CRAMFile
 ) {
-    var CRAMStore = declare( [ SeqFeatureStore, DeferredStatsMixin, DeferredFeaturesMixin, GlobalStatsEstimationMixin ], {
-        constructor: function( args ) {
+    var CRAMStore = declare([ SeqFeatureStore, DeferredStatsMixin, DeferredFeaturesMixin, GlobalStatsEstimationMixin ], {
+        constructor: function (args) {
             var cramBlob = args.cram ||
                 new XHRBlob(
                     this.resolveUrl(args.urlTemplate || 'data.cram')
@@ -35,7 +35,7 @@ function(
 
             var craiBlob = args.crai ||
                 new XHRBlob(
-                    this.resolveUrl(args.craiUrlTemplate || ( args.urlTemplate ? args.urlTemplate+'.crai' : 'data.cram.crai' ))
+                    this.resolveUrl(args.craiUrlTemplate || (args.urlTemplate ? args.urlTemplate + '.crai' : 'data.cram.crai'))
                 );
 
             this.cram = new CRAMFile({
@@ -46,23 +46,23 @@ function(
             });
 
             if (!has('typed-arrays')) {
-                this._failAllDeferred( 'This web browser lacks support for JavaScript typed arrays.' );
+                this._failAllDeferred('This web browser lacks support for JavaScript typed arrays.');
                 return;
             }
 
             this.cram.init({
-                success: lang.hitch(this, function() {
-                   this._deferred.features.resolve({success:true});
+                success: lang.hitch(this, function () {
+                    this._deferred.features.resolve({success: true});
 
-                   this._estimateGlobalStats()
-                       .then( lang.hitch(this, function( stats ) {
-                              this.globalStats = stats;
-                              this._deferred.stats.resolve({success:true});
-                          }),
-                          lang.hitch( this, '_failAllDeferred' )
+                    this._estimateGlobalStats()
+                       .then(lang.hitch(this, function (stats) {
+                           this.globalStats = stats;
+                           this._deferred.stats.resolve({success: true});
+                       }),
+                          lang.hitch(this, '_failAllDeferred')
                         );
                 }),
-                failure: lang.hitch( this, '_failAllDeferred' )
+                failure: lang.hitch(this, '_failAllDeferred')
             });
 
             this.storeTimeout = args.storeTimeout || 3000;
@@ -76,20 +76,20 @@ function(
          * smart enough to regularize reference sequence names, while
          * others are not.
          */
-        hasRefSeq: function( seqName, callback, errorCallback ) {
+        hasRefSeq: function (seqName, callback, errorCallback) {
             var thisB = this;
-            seqName = thisB.browser.regularizeReferenceName( seqName );
-            this._deferred.stats.then( function() {
-                callback( seqName in thisB.cram.chrToIndex );
-            }, errorCallback );
+            seqName = thisB.browser.regularizeReferenceName(seqName);
+            this._deferred.stats.then(function () {
+                callback(seqName in thisB.cram.chrToIndex);
+            }, errorCallback);
         },
 
         // called by getFeatures from the DeferredFeaturesMixin
-        _getFeatures: function( query, featCallback, endCallback, errorCallback ) {
-            this.cram.fetch( this.refSeq.name, query.start, query.end, featCallback, endCallback, errorCallback );
+        _getFeatures: function (query, featCallback, endCallback, errorCallback) {
+            this.cram.fetch(this.refSeq.name, query.start, query.end, featCallback, endCallback, errorCallback);
         },
 
-        saveStore: function() {
+        saveStore: function () {
             return {
                 urlTemplate: this.config.cram.url,
                 craiUrlTemplate: this.config.crai.url

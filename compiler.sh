@@ -9,7 +9,7 @@ fi
 
 mkdir -p dist
 
- configure zlib
+# configure zlib
 cd zlib
 emconfigure ./configure
 emmake make
