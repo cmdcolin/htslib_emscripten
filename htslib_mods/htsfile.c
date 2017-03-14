@@ -143,17 +143,6 @@ static int view_vcf(hFILE *hfp, const char *filename)
     return 1;
 }
 
-static void usage(FILE *fp, int status)
-{
-    fprintf(fp,
-"Usage: htsfile [-chHv] FILE...\n"
-"Options:\n"
-"  -c, --view         Write textual form of FILEs to standard output\n"
-"  -h, --header-only  Display only headers in view mode, not records\n"
-"  -H, --no-header    Suppress header display in view mode\n"
-"  -v, --verbose      Increase verbosity of warnings and diagnostics\n");
-    exit(status);
-}
 
 int main(int argc, char **argv)
 {

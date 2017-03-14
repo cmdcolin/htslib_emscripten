@@ -3,6 +3,8 @@
    Copyright (c) 2008 by Genome Research Ltd (GRL).
                  2010 by Attractive Chaos <attractor@live.co.uk>
 
+   Emscripten updates added by Colin Diesh <colin.diesh@gmail.com>
+
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
    "Software"), to deal in the Software without restriction, including
@@ -89,7 +91,6 @@ static int socket_connect(const char *host, const char *port)
 {
 #define __err_connect(func) do { perror(func); freeaddrinfo(res); return -1; } while (0)
 
-    printf("%s!\n", host);
     int ai_err, on = 1, fd;
     struct linger lng = { 0, 0 };
     struct addrinfo hints, *res = 0;
@@ -100,16 +101,13 @@ static int socket_connect(const char *host, const char *port)
      * server information. */
     if ((ai_err = getaddrinfo(host, port, &hints, &res)) != 0) { fprintf(stderr, "can't resolve %s:%s: %s\n", host, port, gai_strerror(ai_err)); return -1; }
     if ((fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) __err_connect("socket");
-    printf("here2!\n");
     fcntl(fd, F_SETFL, O_NONBLOCK);
-    printf("here3!\n");
   
     int rs = connect(fd, res->ai_addr, res->ai_addrlen);
     if (rs == -1 && errno != EINPROGRESS) {
         perror("connect failed");
         return (EXIT_FAILURE);
     }
-    printf("here4!\n");
 
     freeaddrinfo(res);
 
@@ -278,170 +276,6 @@ void error_callback(int fd, int err, const char* msg, void* userData) {
 
 
 
-
-/*************************
- * FTP specific routines *
- *************************/
-
-static int kftp_get_response(knetFile *ftp)
-{
-    unsigned char c;
-    int n = 0;
-    char *p;
-    if (socket_wait(ftp->ctrl_fd, 1) <= 0) return 0;
-    while (netread(ftp->ctrl_fd, &c, 1)) { // FIXME: this is *VERY BAD* for unbuffered I/O
-        //fputc(c, stderr);
-        if (n >= ftp->max_response) {
-            ftp->max_response = ftp->max_response? ftp->max_response<<1 : 256;
-            ftp->response = (char*)realloc(ftp->response, ftp->max_response);
-        }
-        ftp->response[n++] = c;
-        if (c == '\n') {
-            if (n >= 4 && isdigit(ftp->response[0]) && isdigit(ftp->response[1]) && isdigit(ftp->response[2])
-                && ftp->response[3] != '-') break;
-            n = 0;
-            continue;
-        }
-    }
-    if (n < 2) return -1;
-    ftp->response[n-2] = 0;
-    return strtol(ftp->response, &p, 0);
-}
-
-static int kftp_send_cmd(knetFile *ftp, const char *cmd, int is_get)
-{
-    if (socket_wait(ftp->ctrl_fd, 0) <= 0) return -1; // socket is not ready for writing
-    int len = strlen(cmd);
-    if ( netwrite(ftp->ctrl_fd, cmd, len) != len ) return -1;
-    return is_get? kftp_get_response(ftp) : 0;
-}
-
-static int kftp_pasv_prep(knetFile *ftp)
-{
-    char *p;
-    int v[6];
-    kftp_send_cmd(ftp, "PASV\r\n", 1);
-    for (p = ftp->response; *p && *p != '('; ++p);
-    if (*p != '(') return -1;
-    ++p;
-    sscanf(p, "%d,%d,%d,%d,%d,%d", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
-    memcpy(ftp->pasv_ip, v, 4 * sizeof(int));
-    ftp->pasv_port = (v[4]<<8&0xff00) + v[5];
-    return 0;
-}
-
-
-static int kftp_pasv_connect(knetFile *ftp)
-{
-    char host[80], port[10];
-    if (ftp->pasv_port == 0) {
-        fprintf(stderr, "[kftp_pasv_connect] kftp_pasv_prep() is not called before hand.\n");
-        return -1;
-    }
-    sprintf(host, "%d.%d.%d.%d", ftp->pasv_ip[0], ftp->pasv_ip[1], ftp->pasv_ip[2], ftp->pasv_ip[3]);
-    sprintf(port, "%d", ftp->pasv_port);
-    ftp->fd = socket_connect(host, port);
-    if (ftp->fd == -1) return -1;
-    return 0;
-}
-
-int kftp_connect(knetFile *ftp)
-{
-    ftp->ctrl_fd = socket_connect(ftp->host, ftp->port);
-    if (ftp->ctrl_fd == -1) return -1;
-    kftp_get_response(ftp);
-    kftp_send_cmd(ftp, "USER anonymous\r\n", 1);
-    kftp_send_cmd(ftp, "PASS kftp@\r\n", 1);
-    kftp_send_cmd(ftp, "TYPE I\r\n", 1);
-    return 0;
-}
-
-int kftp_reconnect(knetFile *ftp)
-{
-    if (ftp->ctrl_fd != -1) {
-        netclose(ftp->ctrl_fd);
-        ftp->ctrl_fd = -1;
-    }
-    netclose(ftp->fd);
-    ftp->fd = -1;
-    return kftp_connect(ftp);
-}
-
-// initialize ->type, ->host, ->retr and ->size
-knetFile *kftp_parse_url(const char *fn, const char *mode)
-{
-    knetFile *fp;
-    char *p;
-    int l;
-    if (strstr(fn, "ftp://") != fn) return 0;
-    for (p = (char*)fn + 6; *p && *p != '/'; ++p);
-    if (*p != '/') return 0;
-    l = p - fn - 6;
-    fp = (knetFile*)calloc(1, sizeof(knetFile));
-    fp->type = KNF_TYPE_FTP;
-    fp->fd = -1;
-    /* the Linux/Mac version of socket_connect() also recognizes a port
-     * like "ftp", but the Windows version does not. */
-
-
-    fp->port = strdup("21");
-    fp->host = (char*)calloc(l + 1, 1);
-    if (strchr(mode, 'c')) fp->no_reconnect = 1;
-    strncpy(fp->host, fn + 6, l);
-    fp->retr = (char*)calloc(strlen(p) + 8, 1);
-    sprintf(fp->retr, "RETR %s\r\n", p);
-    fp->size_cmd = (char*)calloc(strlen(p) + 8, 1);
-    sprintf(fp->size_cmd, "SIZE %s\r\n", p);
-    fp->seek_offset = 0;
-    return fp;
-}
-// place ->fd at offset off
-int kftp_connect_file(knetFile *fp)
-{
-    int ret;
-    long long file_size;
-    if (fp->fd != -1) {
-        netclose(fp->fd);
-        if (fp->no_reconnect) kftp_get_response(fp);
-    }
-    kftp_pasv_prep(fp);
-    kftp_send_cmd(fp, fp->size_cmd, 1);
-#ifndef _WIN32
-    // If the file does not exist, the response will be "550 Could not get file
-    // size". Be silent on failure, hts_idx_load can be trying the existence of .csi or .tbi.
-    if ( sscanf(fp->response,"%*d %lld", &file_size) != 1 ) return -1;
-#else
-    const char *p = fp->response;
-    while (*p != ' ') ++p;
-    while (*p < '0' || *p > '9') ++p;
-    file_size = strtoint64(p);
-#endif
-    fp->file_size = file_size;
-    if (fp->offset>=0) {
-        char tmp[32];
-#ifndef _WIN32
-        sprintf(tmp, "REST %lld\r\n", (long long)fp->offset);
-#else
-        strcpy(tmp, "REST ");
-        int64tostr(tmp + 5, fp->offset);
-        strcat(tmp, "\r\n");
-#endif
-        kftp_send_cmd(fp, tmp, 1);
-    }
-    kftp_send_cmd(fp, fp->retr, 0);
-    kftp_pasv_connect(fp);
-    ret = kftp_get_response(fp);
-    if (ret != 150) {
-        fprintf(stderr, "[kftp_connect_file] %s\n", fp->response);
-        netclose(fp->fd);
-        fp->fd = -1;
-        return -1;
-    }
-    fp->is_ready = 1;
-    return 0;
-}
-
-
 /**************************
  * HTTP specific routines *
  **************************/
@@ -485,6 +319,7 @@ int khttp_connect_file(knetFile *fp)
 {
     if (fp->fd != -1) netclose(fp->fd);
     fp->fd = socket_connect(fp->host, fp->port);
+    server.fd = fp->fd;
 
     emscripten_set_socket_error_callback("error", error_callback);
     emscripten_set_socket_open_callback(fp, async_open_loop);
@@ -504,15 +339,7 @@ knetFile *knet_open(const char *fn, const char *mode)
         fprintf(stderr, "[kftp_open] only mode \"r\" is supported.\n");
         return 0;
     }
-    if (strstr(fn, "ftp://") == fn) {
-        fp = kftp_parse_url(fn, mode);
-        if (fp == 0) return 0;
-        if (kftp_connect(fp) == -1) {
-            knet_close(fp);
-            return 0;
-        }
-        kftp_connect_file(fp);
-    } else if (strstr(fn, "http://") == fn) {
+    if (strstr(fn, "http://") == fn) {
         fp = khttp_parse_url(fn, mode);
         if (fp == 0) return 0;
         khttp_connect_file(fp);
@@ -546,27 +373,9 @@ ssize_t knet_read(knetFile *fp, void *buf, size_t len)
 {
     off_t l = 0;
     if (fp->fd == -1) return 0;
-    if (fp->type == KNF_TYPE_FTP) {
-        if (fp->is_ready == 0) {
-            if (!fp->no_reconnect) kftp_reconnect(fp);
-            kftp_connect_file(fp);
-        }
-    } else if (fp->type == KNF_TYPE_HTTP) {
-        if (fp->is_ready == 0)
-            khttp_connect_file(fp);
-    }
-    if (fp->type == KNF_TYPE_LOCAL) { // on Windows, the following block is necessary; not on UNIX
-        size_t rest = len;
-        ssize_t curr;
-        while (rest) {
-            do {
-                curr = read(fp->fd, (void*)((char*)buf + l), rest);
-            } while (curr < 0 && EINTR == errno);
-            if (curr < 0) return -1;
-            if (curr == 0) break;
-            l += curr; rest -= curr;
-        }
-    } else l = my_netread(fp->fd, buf, len);
+    if (fp->is_ready == 0)
+        khttp_connect_file(fp);
+    else l = my_netread(fp->fd, buf, len);
     fp->offset += l;
     return l;
 }
