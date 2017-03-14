@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 export ZLIB_DIR=`pwd`/zlib
-export TEST_FILE=htsfile.c
+export TEST_FILE=../htslib_mods/htsfile.c
 if [ "$(uname)" == "Darwin" ]; then
 EXT=dylib
 else
@@ -47,7 +47,7 @@ emcc -pthread \
     cram/files.c \
     cram/cram_index.c \
     hfile_net.c \
-    knetfile.c \
+    ../htslib_mods/knetfile.c \
     faidx.c \
     cram/open_trace_file.c \
     -o ../dist/out.html
