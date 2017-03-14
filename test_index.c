@@ -7,22 +7,25 @@
 
 #include "cram/cram.h"
 #include "htslib/sam.h"
+#include "htslib/hfile.h"
 
 int main(int argc, char *argv[])
 {
-    samFile *in;
-    int flag = 0, ignore_sam_err = 0;
-    char moder[8];
+    samFile *in = 0;
     bam_hdr_t *h;
     bam1_t *b;
     htsFile *out;
     int r = 0, exit_code = 0;
     hts_opt *in_opts = NULL, *out_opts = NULL;
     int nreads = 0;
-    int extra_hdr_nuls = 0;
-
-    strcpy(moder, "r");
-    in = sam_open("test.cram", moder);
+    
+    hts_idx_t *idx;
+    char *filename = "http://localhost/jbrowse/plugins/CramReader/test/data/volvox.cram";
+    hFILE *hfp = hopen(filename, "r");
+    printf("%p", hfp);
+    in = hts_hopen(hfp, filename, "r");
+    idx = sam_index_load(in, "test.cram");
+    printf("%p", idx);
     if (in == NULL) {
         fprintf(stderr, "Error opening \"%s\"\n", "test.cram");
         return EXIT_FAILURE;
@@ -32,17 +35,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Couldn't read header for \"%s\"\n", "test.cram");
         return EXIT_FAILURE;
     }
-    h->ignore_sam_err = ignore_sam_err;
-    if (extra_hdr_nuls) {
-        char *new_text = realloc(h->text, h->l_text + extra_hdr_nuls);
-        if (new_text == NULL) {
-            fprintf(stderr, "Error reallocing header text\n");
-            return EXIT_FAILURE;
-        }
-        h->text = new_text;
-        memset(&h->text[h->l_text], 0, extra_hdr_nuls);
-        h->l_text += extra_hdr_nuls;
-    }
+    h->ignore_sam_err = 0;
 
     b = bam_init1();
 
@@ -62,7 +55,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error writing output header.\n");
         exit_code = 1;
     }
-    if (optind + 1 < argc && !(flag&1)) { // BAM input and has a region
+    if (optind + 1 < argc) { // BAM input and has a region
         int i;
         hts_idx_t *idx;
         if ((idx = sam_index_load(in, "test.cram")) == 0) {
