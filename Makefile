@@ -7,7 +7,8 @@ ifeq ($(UNAME), Darwin)
 else
     EXT=so
 endif
-
+.PHONY: default
+default: all;
 zlib:
 	cd zlib; emconfigure ./configure; emmake make; cd -
 
@@ -49,3 +50,5 @@ all: htslib
 		htslib_mods/knetfile.c \
 		htslib_mods/htsfile.c \
 		-o out.html
+
+

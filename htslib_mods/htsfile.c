@@ -4,6 +4,8 @@
 
     Author: John Marshall <jm18@sanger.ac.uk>
 
+    Emscripten updates added by Colin Diesh <colin.diesh@gmail.com>
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -144,23 +146,11 @@ static int view_vcf(hFILE *hfp, const char *filename)
 }
 
 
-int main(int argc, char **argv)
-{
-    static const struct option options[] = {
-        { "header-only", no_argument, NULL, 'h' },
-        { "no-header", no_argument, NULL, 'H' },
-        { "view", no_argument, NULL, 'c' },
-        { "verbose", no_argument, NULL, 'v' },
-        { "help", no_argument, NULL, '?' },
-        { "version", no_argument, NULL, 1 },
-        { NULL, 0, NULL, 0 }
-    };
-
+int main(int argc, char **argv) {
     int c, i;
 
     status = EXIT_SUCCESS;
 
-    printf("here\n");
     htsFormat fmt;
     hFILE *fp = hopen("http://localhost/jbrowse/plugins/CramReader/test/data/volvox.cram", "r");
     if (fp == NULL) {
@@ -168,30 +158,9 @@ int main(int argc, char **argv)
         status = EXIT_FAILURE;
     }
 
-    if (hts_detect_format(fp, &fmt) < 0) {
-        fprintf(stderr, "htsfile: detecting \"%s\" format failed: %s\n", argv[i], strerror(errno));
-        hclose_abruptly(fp);
-        status = EXIT_FAILURE;
-    }
 
-    if (mode == identify) {
-        char *description = hts_format_description(&fmt);
-        printf("%s:\t%s\n", argv[i], description);
-        free(description);
-    }
-    else
-        switch (fmt.category) {
-        case sequence_data:
-            if (view_sam(fp, argv[i])) fp = NULL;
-            break;
-        case variant_data:
-            if (view_vcf(fp, argv[i])) fp = NULL;
-            break;
-        default:
-            fprintf(stderr, "htsfile: can't view %s: unknown format\n", argv[i]);
-            status = EXIT_FAILURE;
-            break;
-        }
+//    if (view_sam(fp, argv[i])) fp = NULL;
+    
 
     if (fp && hclose(fp) < 0) {
         fprintf(stderr, "htsfile: closing %s failed\n", argv[i]);

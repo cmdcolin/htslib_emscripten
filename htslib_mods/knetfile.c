@@ -71,6 +71,7 @@ int echo_wrote;
  * writing if is_read==0). */
 static int socket_wait(int fd, int is_read)
 {
+    printf("socket_wait\n");
     fd_set fds, *fdr = 0, *fdw = 0;
     struct timeval tv;
     int ret;
@@ -110,8 +111,6 @@ static int socket_connect(const char *host, const char *port)
     }
 
     freeaddrinfo(res);
-
-
     return fd;
 }
 
@@ -262,6 +261,7 @@ void async_message_loop(int fd, void* userData) {
 }
 
 void async_open_loop(int fd, void* fp) {
+    printf("open!!!!!!!!!!!");
     khttp_connect_file_followup((knetFile *)fp);
 }
 
@@ -317,8 +317,10 @@ knetFile *khttp_parse_url(const char *fn, const char *mode)
 
 int khttp_connect_file(knetFile *fp)
 {
+    printf("kconnect\n");
     if (fp->fd != -1) netclose(fp->fd);
     fp->fd = socket_connect(fp->host, fp->port);
+    printf("%d\n",fp->fd);
     server.fd = fp->fd;
 
     emscripten_set_socket_error_callback("error", error_callback);
@@ -343,16 +345,6 @@ knetFile *knet_open(const char *fn, const char *mode)
         fp = khttp_parse_url(fn, mode);
         if (fp == 0) return 0;
         khttp_connect_file(fp);
-    } else { // local file
-        int fd = open(fn, O_RDONLY);
-        if (fd == -1) {
-            perror("open");
-            return 0;
-        }
-        fp = (knetFile*)calloc(1, sizeof(knetFile));
-        fp->type = KNF_TYPE_LOCAL;
-        fp->fd = fd;
-        fp->ctrl_fd = -1;
     }
     if (fp && fp->fd == -1) {
         knet_close(fp);
@@ -429,40 +421,4 @@ int knet_close(knetFile *fp)
     free(fp);
     return 0;
 }
-#ifdef KNETFILE_MAIN
-int main(void)
-{
-    char *buf;
-    knetFile *fp;
-    int type = 4, l;
-    buf = calloc(0x100000, 1);
-    if (type == 0) {
-        fp = knet_open("knetfile.c", "r");
-        knet_seek(fp, 1000, SEEK_SET);
-    } else if (type == 1) { // NCBI FTP, large file
-        fp = knet_open("ftp://ftp.ncbi.nih.gov/1000genomes/ftp/data/NA12878/alignment/NA12878.chrom6.SLX.SRP000032.2009_06.bam", "r");
-        knet_seek(fp, 2500000000ll, SEEK_SET);
-        l = knet_read(fp, buf, 255);
-    } else if (type == 2) {
-        fp = knet_open("ftp://ftp.sanger.ac.uk/pub4/treefam/tmp/index.shtml", "r");
-        knet_seek(fp, 1000, SEEK_SET);
-    } else if (type == 3) {
-        fp = knet_open("http://www.sanger.ac.uk/Users/lh3/index.shtml", "r");
-        knet_seek(fp, 1000, SEEK_SET);
-    } else if (type == 4) {
-        fp = knet_open("http://www.sanger.ac.uk/Users/lh3/ex1.bam", "r");
-        knet_read(fp, buf, 10000);
-        knet_seek(fp, 20000, SEEK_SET);
-        knet_seek(fp, 10000, SEEK_SET);
-        l = knet_read(fp, buf+10000, 10000000) + 10000;
-    }
-    if (type != 4 && type != 1) {
-        knet_read(fp, buf, 255);
-        buf[255] = 0;
-        printf("%s\n", buf);
-    } else write(fileno(stdout), buf, l);
-    knet_close(fp);
-    free(buf);
-    return 0;
-}
-#endif
+
