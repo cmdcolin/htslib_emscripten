@@ -470,13 +470,6 @@ knetFile *knet_open(const char *fn, const char *mode)
     return fp;
 }
 
-knetFile *knet_dopen(int fd, const char *mode)
-{
-    knetFile *fp = (knetFile*)calloc(1, sizeof(knetFile));
-    fp->type = KNF_TYPE_LOCAL;
-    fp->fd = fd;
-    return fp;
-}
 
 ssize_t knet_read(knetFile *fp, void *buf, size_t len)
 {
@@ -493,34 +486,17 @@ ssize_t knet_read(knetFile *fp, void *buf, size_t len)
 off_t knet_seek(knetFile *fp, off_t off, int whence)
 {
     if (whence == SEEK_SET && off == fp->offset) return 0;
-    if (fp->type == KNF_TYPE_LOCAL) {
-        /* Be aware that lseek() returns the offset after seeking, while fseek() returns zero on success. */
-        off_t offset = lseek(fp->fd, off, whence);
-        if (offset == -1) return -1;
-        fp->offset = offset;
-        return fp->offset;
-    } else if (fp->type == KNF_TYPE_FTP) {
-        if (whence == SEEK_CUR) fp->offset += off;
-        else if (whence == SEEK_SET) fp->offset = off;
-        else if (whence == SEEK_END) fp->offset = fp->file_size + off;
-        else return -1;
-        fp->is_ready = 0;
-        return fp->offset;
-    } else if (fp->type == KNF_TYPE_HTTP) {
-        if (whence == SEEK_END) { // FIXME: can we allow SEEK_END in future?
-            fprintf(stderr, "[knet_seek] SEEK_END is not supported for HTTP. Offset is unchanged.\n");
-            errno = ESPIPE;
-            return -1;
-        }
-        if (whence == SEEK_CUR) fp->offset += off;
-        else if (whence == SEEK_SET) fp->offset = off;
-        else return -1;
-        fp->is_ready = 0;
-        return fp->offset;
+    
+    if (whence == SEEK_END) { // FIXME: can we allow SEEK_END in future?
+        fprintf(stderr, "[knet_seek] SEEK_END is not supported for HTTP. Offset is unchanged.\n");
+        errno = ESPIPE;
+        return -1;
     }
-    errno = EINVAL;
-    fprintf(stderr,"[knet_seek] %s\n", strerror(errno));
-    return -1;
+    if (whence == SEEK_CUR) fp->offset += off;
+    else if (whence == SEEK_SET) fp->offset = off;
+    else return -1;
+    fp->is_ready = 0;
+    return fp->offset;
 }
 
 int knet_close(knetFile *fp)
