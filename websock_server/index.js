@@ -3,7 +3,6 @@ var ws = require("nodejs-websocket")
 // Scream server example: "hi" -> "HI!!!"
 var server = ws.createServer({
     selectProtocol: function(arg1, arg2) {
-        console.log('a1',arg1)
         console.log('a2',arg2);
         return arg2;
     }
