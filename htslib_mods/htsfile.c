@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
     status = EXIT_SUCCESS;
 
     htsFormat fmt;
-    hFILE *fp = hopen("http://localhost/jbrowse/plugins/CramReader/test/data/volvox.cram", "r");
+    hFILE *fp = hopen("http://localhost:8001/volvox.cram", "r");
     if (fp == NULL) {
         fprintf(stderr, "htsfile: can't open \"%s\": %s\n", argv[i], strerror(errno));
         status = EXIT_FAILURE;
