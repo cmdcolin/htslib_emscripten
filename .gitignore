@@ -1,3 +1,5 @@
 dist
 zlib/ztest*
 node_modules
+out.html
+out.js

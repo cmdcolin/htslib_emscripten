@@ -19,17 +19,12 @@ The htslib and zlib dependencies are available in this repo as git subtrees
 
 The application relies on communicating CRAM results over websockets, so a lightweight websocket server is provided
 
-### Install websock_server prerequisites
+### Usage
 
     yarn
-
-### Usage websock_server
-
-    node websock_server/index.js
+    node websock_server
 
 You may want to use `pm2` or `forever` to run the package and/or reverse proxy over nginx
-
-
 
 ## Notes
 
