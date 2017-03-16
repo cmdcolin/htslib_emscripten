@@ -7,13 +7,15 @@ ifeq ($(UNAME), Darwin)
 else
     EXT=so
 endif
+
 .PHONY: default
 default: all;
-zlib:
-	cd zlib; emconfigure ./configure; emmake make; cd -
 
-htslib: zlib
-	$(MAKE) -C $(HTSLIB_DIR)
+zlib: $(ZLIB_DIR)/Makefile
+	cd $(ZLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
+
+htslib: zlib $(ZLIB_DIR)/libz.$(EXT)
+	cd $(HTSLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
 
 all: htslib
 	emcc -pthread \
@@ -44,6 +46,7 @@ all: htslib
 		$(HTSLIB_DIR)/cram/mFILE.c \
 		$(HTSLIB_DIR)/cram/files.c \
 		$(HTSLIB_DIR)/cram/cram_index.c \
+		$(HTSLIB_DIR)/hfile.c \
 		$(HTSLIB_DIR)/hfile_net.c \
 		$(HTSLIB_DIR)/faidx.c \
 		$(HTSLIB_DIR)/cram/open_trace_file.c \

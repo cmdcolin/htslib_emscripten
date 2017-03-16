@@ -48,6 +48,10 @@
 #include "htslib/knetfile.h"
 #include "socklib.h"
 
+#ifndef MESSAGE
+#define MESSAGE "pingtothepong"
+#endif
+
 
 typedef enum {
   MSG_READ,
@@ -98,24 +102,49 @@ void finish(int result) {
  * Guide to Network Programming" (http://beej.us/guide/bgnet/). */
 static int socket_connect(const char *host, const char *port)
 {
-    int fd, res;
-    struct sockaddr_in addr;
-    fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-          
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(8010);
-    if (inet_pton(AF_INET, host, &addr.sin_addr) != 1) {
-        perror("inet_pton failed");
-        return -1;
-    }
-    res = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
-    if (res == -1 && errno != EINPROGRESS) {
-        perror("connect failed");
-        return -1;
-    }
-    fcntl(fd, F_SETFL, O_NONBLOCK);
+  struct sockaddr_in addr;
+  int res;
 
-    return fd;
+  memset(&server, 0, sizeof(server_t));
+  server.state = MSG_WRITE;
+
+  // setup the message we're going to echo
+  memset(&echo_msg, 0, sizeof(msg_t));
+  echo_msg.length = strlen(MESSAGE) + 1;
+  echo_msg.buffer = malloc(echo_msg.length);
+  strncpy(echo_msg.buffer, MESSAGE, echo_msg.length);
+
+  echo_read = 0;
+  echo_wrote = 0;
+
+  // create the socket and set to non-blocking
+  server.fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (server.fd == -1) {
+    perror("cannot create socket");
+    finish(EXIT_FAILURE);
+  }
+  fcntl(server.fd, F_SETFL, O_NONBLOCK);
+
+
+  // connect the socket
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(8010);
+  if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) != 1) {
+    perror("inet_pton failed");
+    finish(EXIT_FAILURE);
+  }
+
+  res = connect(server.fd, (struct sockaddr *)&addr, sizeof(addr));
+  if (res == -1 && errno != EINPROGRESS) {
+    perror("connect failed");
+    finish(EXIT_FAILURE);
+  }
+
+  printf("CONNECT!\n");
+
+
+    return server.fd;
 }
 
 void main_loop() {
@@ -147,6 +176,8 @@ void main_loop() {
     // after selecting
     int available;
     res = ioctl(server.fd, FIONREAD, &available);
+    printf("hi %d\n",res);
+        printf("loll2\n");
     assert(res != -1);
     assert(available);
 #endif
@@ -162,8 +193,11 @@ void main_loop() {
     echo_read += res;
 
     // once we've read the entire message, validate it
+        printf("server.msg %s\n",server.msg.buffer);
     if (echo_read >= server.msg.length) {
-      assert(!strcmp(server.msg.buffer, "PING"));
+        printf("server.msg %s\n",server.msg.buffer);
+        printf("loll2\n");
+      assert(!strcmp(server.msg.buffer, "PONG"));
       finish(EXIT_SUCCESS);
     }
   }
@@ -210,6 +244,7 @@ void not_main_loop() {
     }
 
     if (server.state == MSG_READ) {
+        printf("LOLLLLL!\n");
         if (!FD_ISSET(server.fd, &fdr)) {
             return;
         }
@@ -225,8 +260,10 @@ void not_main_loop() {
         echo_read += res;
 
         // once we've read the entire message, validate it
+        printf("super! %s\n", server.msg.buffer);
         if (echo_read >= server.msg.length) {
-            assert(!strcmp(server.msg.buffer, "TEST"));
+        printf("loll2\n");
+            assert(!strcmp(server.msg.buffer, "PONG"));
             finish(EXIT_SUCCESS);
         }
     }
@@ -272,12 +309,15 @@ static off_t my_netread(int fd, void *buf, off_t len)
     return l;
 }
 int khttp_connect_file_followup(knetFile *fp) {
+    printf("khttp_connect_file\n");
     int ret, l = 0;
     char *buf, *p;
     buf = (char*)calloc(0x10000, 1); // FIXME: I am lazy... But in principle, 64KB should be large enough.
+    printf("CONNECT\n");
     l += sprintf(buf + l, "GET %s HTTP/1.0\r\nHost: %s\r\n", fp->path, fp->http_host);
     l += sprintf(buf + l, "Range: bytes=%lld-\r\n", (long long)fp->offset);
     l += sprintf(buf + l, "\r\n");
+    printf("writing request\n");
     if ( netwrite(fp->fd, buf, l) != l ) { free(buf); return -1; }
     l = 0;
     while (netread(fp->fd, buf + l, 1)) { // read HTTP header; FIXME: bad efficiency
@@ -326,16 +366,17 @@ int khttp_connect_file_followup(knetFile *fp) {
 // In this test application we want to try and keep as much in common as the timed loop
 // version but in a real application the fd can be used instead of needing to select().
 void async_message_loop(int fd, void* userData) {
-    printf("%s callback\n", userData);
+    printf("async_message_loop %s callback\n", userData);
     main_loop();
 }
 
 void async_open_loop(int fd, void* fp) {
-    printf("open!!!!!!!!!!!");
+    printf("async_open_loop->followup");
     khttp_connect_file_followup((knetFile *)fp);
 }
 
 void error_callback(int fd, int err, const char* msg, void* userData) {
+    printf("error_callback");
     int error;
     socklen_t len = sizeof(error);
 
@@ -399,8 +440,8 @@ void async_main_loop(int fd, void* userData) {
 
 int khttp_connect_file(knetFile *fp)
 {
-    printf("kconnect\n");
-    if (fp->fd != -1) netclose(fp->fd);
+    printf("khttp_connect_file\n");
+    //if (fp->fd != -1) netclose(fp->fd);
     fp->fd = socket_connect(fp->host, fp->port);
     printf("%d\n",fp->fd);
     server.fd = fp->fd;
@@ -418,7 +459,9 @@ int khttp_connect_file(knetFile *fp)
       // TODO: This is not the correct result: We should have a auto-bound address
       char *correct = "0.0.0.0:0";
       printf("got (expected) socket: %s (%s), size %d (%d)\n", buffer, correct, strlen(buffer), strlen(correct));
+        printf("loll2\n");
       assert(strlen(buffer) == strlen(correct));
+        printf("loll2\n");
       assert(strcmp(buffer, correct) == 0);
     }
 
@@ -436,9 +479,12 @@ int khttp_connect_file(knetFile *fp)
       char correct[1000];
       sprintf(correct, "127.0.0.1:%u", 8010);
       printf("got (expected) socket: %s (%s), size %d (%d)\n", buffer, correct, strlen(buffer), strlen(correct));
+        printf("loll2\n");
       assert(strlen(buffer) == strlen(correct));
+        printf("loll2\n");
       assert(strcmp(buffer, correct) == 0);
     }
+    printf("setting callbacks\n");
 
     emscripten_set_socket_error_callback("error", error_callback);
     emscripten_set_socket_open_callback("open", async_main_loop);
@@ -461,12 +507,15 @@ knetFile *knet_open(const char *fn, const char *mode)
     if (strstr(fn, "http://") == fn) {
         fp = khttp_parse_url(fn, mode);
         if (fp == 0) return 0;
+        printf("knet_open->khttp_connect_file\n");
         khttp_connect_file(fp);
     }
     if (fp && fp->fd == -1) {
+        printf("knet_open fail");
         knet_close(fp);
         return 0;
     }
+    printf("knet_open success\n");
     return fp;
 }
 

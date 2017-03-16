@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.  */
 #include "htslib/sam.h"
 #include "htslib/vcf.h"
 
+
 enum { identify, view_headers, view_all } mode = identify;
 int show_headers = 1;
 int status = EXIT_SUCCESS;  /* Exit status from main */
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
     status = EXIT_SUCCESS;
 
     htsFormat fmt;
-    hFILE *fp = hopen("http://127.0.0.1:8010/", "r");
+    hFILE *fp = hopen("http://127.0.0.1:8010/volvox.cram", "r");
     if (fp == NULL) {
         fprintf(stderr, "htsfile: can't open \"%s\": %s\n", argv[i], strerror(errno));
         status = EXIT_FAILURE;
@@ -163,10 +164,8 @@ int main(int argc, char **argv) {
 
     
 
-    if (fp && hclose(fp) < 0) {
-        fprintf(stderr, "htsfile: closing %s failed\n", argv[i]);
-        status = EXIT_FAILURE;
-    }
+
+    
 
     return status;
 }

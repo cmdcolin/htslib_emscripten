@@ -13,6 +13,7 @@ int do_msg_read(int sockfd, msg_t *msg, int offset, int length, struct sockaddr 
     // read the message length
     res = recvfrom(sockfd, &msg->length, sizeof(int), 0, addr, addrlen);
     if (res == -1) {
+        printf("loll12\n");
       assert(errno == EAGAIN);
       return res;
     } else if (res == 0) {
@@ -31,6 +32,7 @@ int do_msg_read(int sockfd, msg_t *msg, int offset, int length, struct sockaddr 
   }
   res = recvfrom(sockfd, msg->buffer + offset, max, 0, addr, addrlen);
   if (res == -1) {
+        printf("loll13\n");
     assert(errno == EAGAIN);
     return res;
   }
@@ -51,11 +53,12 @@ int do_msg_write(int sockfd, msg_t *msg, int offset, int length, struct sockaddr
       res = send(sockfd, &msg->length, sizeof(int), 0);
     }
     if (res == -1) {
+        printf("loll14\n");
       assert(errno == EAGAIN);
       return res;
     }
     printf("do_msg_write: sending message header for %d bytes\n", msg->length);
-    assert(res == sizeof(int));
+        printf("loll15\n");
   }
 
   // then the actual message
@@ -69,11 +72,13 @@ int do_msg_write(int sockfd, msg_t *msg, int offset, int length, struct sockaddr
     res = send(sockfd, msg->buffer + offset, max, 0);
   }
   if (res == -1) {
+        printf("loll17\n");
     assert(errno == EAGAIN);
     return res;
   }
 
   printf("do_msg_write: wrote %d bytes %d\n", res, msg->length);
+  printf("donnn\n");
 
   return res;
 }
