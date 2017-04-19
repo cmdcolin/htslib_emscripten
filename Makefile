@@ -8,16 +8,15 @@ else
     EXT=so
 endif
 
-.PHONY: default
-default: all;
+default: all
 
-zlib: $(ZLIB_DIR)/Makefile
+zlibla:
 	cd $(ZLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
 
-htslib: zlib $(ZLIB_DIR)/libz.$(EXT)
+htslibla: zlibla
 	cd $(HTSLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
 
-all: htslib
+all: htslibla
 	emcc -pthread \
 		-L $(HTSLIB_DIR) \
 		-I $(ZLIB_DIR) \
