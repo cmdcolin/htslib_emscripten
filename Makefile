@@ -1,4 +1,3 @@
-ZLIB_DIR=$(PWD)/zlib
 HTSLIB_DIR=$(PWD)/htslib
 UNAME := $(shell uname)
 
@@ -10,18 +9,15 @@ endif
 
 default: all
 
-zlibla:
-	cd $(ZLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
 
-htslibla: zlibla
-	cd $(HTSLIB_DIR); emconfigure ./configure; emmake $(MAKE); cd -
+htslibla:
 
 all: htslibla
+	cd $(HTSLIB_DIR); ./configure; $(MAKE); cd -
 	emcc -pthread \
 		-L $(HTSLIB_DIR) \
-		-I $(ZLIB_DIR) \
 		-I $(HTSLIB_DIR) \
-		$(ZLIB_DIR)/libz.$(EXT) \
+		-s USE_ZLIB=1 \
 		$(HTSLIB_DIR)/libhts.$(EXT) \
 		$(HTSLIB_DIR)/cram/cram_io.c \
 		$(HTSLIB_DIR)/hts.c \
