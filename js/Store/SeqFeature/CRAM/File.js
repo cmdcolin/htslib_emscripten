@@ -72,6 +72,7 @@ function (
 
         _readCRAI: function (successCallback, failCallback) {
             this.crai.fetch(dojo.hitch(this, function (header) {
+                console.log('fetching')
                 if (!header) {
                     dlog('No data read from CRAM index (CRAI) file');
                     failCallback('No data read from CRAM index (CRAI) file');
@@ -103,7 +104,9 @@ function (
                     var x = Module.ccall('bam_aux2A', 'number', ['number'], [v]);
                     console.log('x', x);
                 }
-            }));
+            }), function(error) {
+                console.error(error);
+            });
         }
     });
 });
