@@ -10,10 +10,9 @@ endif
 default: all
 
 
-htslibla:
 
-all: htslibla
-	cd $(HTSLIB_DIR); ./configure; $(MAKE); cd -
+all:
+	cd $(HTSLIB_DIR); autoheader; autoconf; ./configure; $(MAKE); cd -
 	emcc -pthread \
 		-L $(HTSLIB_DIR) \
 		-I $(HTSLIB_DIR) \
