@@ -50,6 +50,6 @@ all:
 		-s NO_EXIT_RUNTIME=1 \
 		-s FORCE_FILESYSTEM=1 \
 		-s EXPORTED_FUNCTIONS="['_hts_open','_sam_hdr_read','_bam_init1','_sam_read1','_bam_aux_get','_bam_aux2A','_sam_index_load']" \
-		-o out.js
+		-o js/Store/SeqFeature/CRAM/Htslib.js
 
 

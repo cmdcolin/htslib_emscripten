@@ -3,3 +3,5 @@ zlib/ztest*
 node_modules
 out.html
 out.js
+htslib/config.h.in*
+a.out.js*
