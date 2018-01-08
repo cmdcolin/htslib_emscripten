@@ -7,3 +7,4 @@ htslib/config.h.in*
 a.out.js*
 pileup_bam.js
 fetch-worker.js
+pthread-main.js
