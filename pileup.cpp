@@ -26,7 +26,7 @@ static int read_bam(void *data, bam1_t *b) {
     return ret;
 }
 
-void pileup(htsFile *fp, hts_idx_t* bai, faidx_t *fai, const char* reg, void (*callback)(const char*, int, char, int) ) {
+void pileup(htsFile *fp, hts_idx_t* bai, const char* reg, void (*callback)(const char*, int, char, int) ) {
     bam_hdr_t *hdr = sam_hdr_read(fp);
     int cnt, ret, pos, qpos, tid, n_plp, depth, j, m;
     char ref_base = 'N';
@@ -57,7 +57,6 @@ void pileup(htsFile *fp, hts_idx_t* bai, faidx_t *fai, const char* reg, void (*c
         depth = n_plp - m;
         c_name = data->hdr->target_name[tid];
 
-        if (fai) ref_base = faidx_fetch_seq(fai, c_name, pos, pos, &m)[0];
 
         callback(c_name, pos+1, ref_base, depth);
     }

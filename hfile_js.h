@@ -3,7 +3,7 @@
 
 typedef struct {
     hFILE base;
-    int fd;
+    char * filename;
 } hFILE_js;
 
 hFILE *hopen_js(int);

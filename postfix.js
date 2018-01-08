@@ -106,17 +106,12 @@ function js_read(fd, ptr, nbytes) {
     return htsfiles[fd].read(ptr, nbytes);
 }
 
-function hts_open(fileobj, progress_callback) {
-    for (var fd=1;;fd++) {
-        if (htsfiles[fd] === undefined)
-            break;
-    }
-
-    htsfiles[fd] = new Htsfile(fileobj, progress_callback);;
+function hts_open(filename, progress_callback) {
+    htsfiles[filename] = new Htsfile(filename, progress_callback);;
     console.log('herehrehre');
 
-    var hts_open_js = cwrap('hts_open_js', 'number', ['number', 'string']);
-    if (hts_open_js(fd, fileobj.name) == 0)
+    var hts_open_js = cwrap('hts_open_js', 'number', ['string']);
+    if (hts_open_js(filename, fileobj.name) == 0)
         return fd;
     else
         throw "Something wrong happened while opening file.";
@@ -128,7 +123,7 @@ function hts_close(fd) {
 }
 
 function run_pileup(fd_bam, fd_bai, fd_fa, fd_fai, reg) {
-    var func = cwrap('run_pileup', 'number', ['number', 'number', 'number', 'number', 'string']);
+    var func = cwrap('run_pileup', 'number', ['string','string', 'string']);
     func(fd_bam, fd_bai, fd_fa, fd_fai, reg);
 }
 

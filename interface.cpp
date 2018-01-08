@@ -2,23 +2,25 @@
 #include <emscripten/fetch.h>
 #include <stdlib.h>
 #include <map>
+#include <string>
 
 #include "interface.h"
 
 file_map htsFiles;
+using namespace std;
 
 extern "C" {
     // JavaScript interface
-    int hts_open_js(int fd, char* fn) {
-        if (htsFiles.find(fd) != htsFiles.end()) return 1;
+    int hts_open_js(const string& filename) {
+        if (htsFiles.find(filename) != htsFiles.end()) return 1;
 
-        hFILE* h_f = hopen_js(fd);
-        htsFile* f = hts_hopen_js(h_f, fn, "r");
-        htsFiles[fd] = f;
+        hFILE* h_f = hopen_js(filename);
+        htsFile* f = hts_hopen_js(h_f, filename, "r");
+        htsFiles[filename] = f;
 
         return 0;
     }
-    int hts_fetch_js(int fd, char* fn) {
+    int hts_fetch_js(const string& filename) {
         emscripten_fetch_attr_t attr;
         emscripten_fetch_attr_init(&attr);
         strcpy(attr.requestMethod, "GET");
@@ -40,7 +42,7 @@ extern "C" {
 
 
     // JavaScript interface
-    void hts_close_js(int fd) {
-        delete htsFiles[fd];
+    void hts_close_js(const string& filename) {
+        delete htsFiles[filename];
     }
 }
