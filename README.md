@@ -16,6 +16,10 @@ The htslib code is available in this repo as a git subtree
 
 ## Notes
 
+This repo has incorporated code from https://github.com/eilslab/htslib-js and shares the LGPL license
+
 Compilation tested on Ubuntu and OSX
 
 **This project is currently totally non-functional**
+
+
