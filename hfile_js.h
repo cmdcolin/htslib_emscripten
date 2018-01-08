@@ -5,6 +5,7 @@
 typedef struct {
     hFILE base;
     std::string filename;
+    int fd;
 } hFILE_js;
 
-hFILE *hopen_js(const std::string&);
+hFILE *hopen_js(const std::string&, int fd);

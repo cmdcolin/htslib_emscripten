@@ -107,11 +107,16 @@ function js_read(fd, ptr, nbytes) {
 }
 
 function hts_open(filename, progress_callback) {
-    htsfiles[filename] = new Htsfile(filename, progress_callback);;
-    console.log('herehrehre');
+    for (var fd=1;;fd++) {
+        if (htsfiles[fd] === undefined)
+            break;
+    }
+    console.log(fd,'wawa');
 
-    var hts_open_js = cwrap('hts_open_js', 'number', ['string']);
-    if (hts_open_js(filename) == 0)
+    htsfiles[fd] = new Htsfile(filename, progress_callback);
+
+    var hts_open_js = cwrap('hts_open_js', 'number', ['string', 'number']);
+    if (hts_open_js(filename, fd) == 0)
         return fd;
     else
         throw "Something wrong happened while opening file.";
@@ -122,9 +127,9 @@ function hts_close(fd) {
     Module._hts_close_js(fd);
 }
 
-function run_pileup(fd_bam, fd_bai, fd_fa, fd_fai, reg) {
+function run_pileup(fd_bam, fd_bai, reg) {
     var func = cwrap('run_pileup', 'number', ['string','string', 'string']);
-    func(fd_bam, fd_bai, fd_fa, fd_fai, reg);
+    func(fd_bam, fd_bai, reg);
 }
 
 self["hts_open"] = hts_open;

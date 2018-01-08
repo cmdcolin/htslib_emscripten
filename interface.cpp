@@ -11,10 +11,10 @@ using namespace std;
 
 extern "C" {
     // JavaScript interface
-    int hts_open_js(const string& filename) {
+    int hts_open_js(const string& filename, int fd) {
         if (htsFiles.find(filename) != htsFiles.end()) return 1;
 
-        hFILE* h_f = hopen_js(filename);
+        hFILE* h_f = hopen_js(filename, fd);
         htsFile* f = hts_hopen_js(h_f, filename.c_str(), "r");
         htsFiles[filename] = f;
 
