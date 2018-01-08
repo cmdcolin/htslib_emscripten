@@ -11,7 +11,6 @@ function Htsfile(filename, progress_callback) {
     this.eof = 0;
     this.last_chunk = 0;
     this.progress_callback = progress_callback;
-    console.log('this',this.filename);
 }
 
 Htsfile.prototype._getchunk = function () {
@@ -111,9 +110,6 @@ function hts_open(filename, progress_callback) {
         if (htsfiles[fd] === undefined)
             break;
     }
-    console.log(fd,'wawa');
-    console.log(filename,'wawa2');
-
     htsfiles[fd] = new Htsfile(filename, progress_callback);
 
     var hts_open_js = cwrap('hts_open_js', 'number', ['string', 'number']);

@@ -25,10 +25,11 @@ extern "C" {
         emscripten_fetch_attr_t attr;
         emscripten_fetch_attr_init(&attr);
         strcpy(attr.requestMethod, "GET");
-        printf("fetch %s\n",filename.c_str());
+
         attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_WAITABLE;
+        const char * headers[]={"Range", "bytes=1-10000",0};
+        attr.requestHeaders = headers; // appears to not be implemented yet
         emscripten_fetch_t *fetch = emscripten_fetch(&attr, filename.c_str());
-        //filename.c_str()); // Starts as asynchronous.
 
         EMSCRIPTEN_RESULT ret = EMSCRIPTEN_RESULT_TIMED_OUT;
         while(ret == EMSCRIPTEN_RESULT_TIMED_OUT) {
