@@ -1,4 +1,4 @@
-HTSLIB_DIR=$(PWD)/htslib
+HTSLIB_DIR=htslib
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
@@ -48,11 +48,15 @@ all:
         pileup.cpp \
         interface_js.cpp \
 		interface.cpp \
+		hts_js.cpp \
+		hfile_js.cpp \
+		faidx_js.cpp \
 		--post-js postfix.js \
 		-s NO_EXIT_RUNTIME=1 \
 		-s FORCE_FILESYSTEM=1 \
         -s USE_PTHREADS=1 \
         -s EXPORT_ALL=1 \
+        -s EXPORTED_FUNCTIONS="['_hts_open_js','_hts_fetch_js']" \
         -s FETCH=1 \
         -o pileup_bam.js
 
