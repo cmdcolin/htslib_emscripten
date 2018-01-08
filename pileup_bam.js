@@ -76293,7 +76293,7 @@ if (!ENVIRONMENT_IS_PTHREAD) run();
 var htsfiles = {};
 
 function Htsfile(fileobj, progress_callback) {
-    this.reader = new FileReaderSync();
+    this.reader = {};
     this.offset = 0;
     this.cursor = -1;
     this.bufsize = 4194304; // 4 MiB
@@ -76318,7 +76318,7 @@ Htsfile.prototype._getchunk = function () {
         this.last_chunk = 1;
     }
     this.offset += this.bufsize;
-    this.buf = this.reader.readAsArrayBuffer(blob);
+    this.buf = hts_fetch_js; // todo    this.reader.readAsArrayBuffer(blob);
     this.cursor = 0;
     if (this.progress_callback)
         this.progress_callback(this.offset/this.fileobj.size*100);

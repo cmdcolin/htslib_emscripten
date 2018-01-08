@@ -2,39 +2,59 @@
 <head>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anymous"></script>
+    <script src="pileup_bam.js"></script>
 <script>
-var w = new Worker("pileup_bam-worker.js");
 
-function run(cmd) {
+function myrun(cmd) {
+    console.log('run');
     var bam = document.getElementById("bam").files[0];
     var bai = document.getElementById("bai").files.length?document.getElementById("bai").files[0]:0;
     var fa = document.getElementById("fa").files.length?document.getElementById("fa").files[0]:0;
     var fai = document.getElementById("fai").files.length?document.getElementById("fai").files[0]:0;
-    w.onmessage = function (p) {
-        if (p.data[0] == 0) {
-            console.log(p.data[1]);
-        } else if (p.data[0] == 2) {
-            console.log(p.data[1],p.data[2],p.data[3],p.data[4]);
-        } else if (p.data[0] == 3) {
-            console.log(p.data[1],"seconds");
-        }
-    };
-    w.postMessage([cmd, bam, bai, fa, fai, "ctgA:1-1000"]);
+
+
+    fd_bam = hts_open(bam, function() {
+        console.log('here progress');
+    });
+    if (e.data[2])
+        fd_bai = hts_open(bai);
+    else
+        fd_bai = -1;
+    if (e.data[3]) {
+        fd_fa = hts_open(fa);
+        fd_fai = hts_open(fai);
+    } else {
+        fd_fa = -1;
+        fd_fai = -1;
+    }
+    run_pileup(fd_bam, fd_bai, fd_fa, fd_fai, "ctgA:1-1000");
+    hts_close(fd_bam); 
+    if (fd_bai > 0) hts_close(fd_bai); 
+    if (fd_fa > 0) {
+       hts_close(fd_fa); 
+       hts_close(fd_fai);
+    }
+
 }
 </script>
 </head>
 <body>
     <label for="bam">BAM:</label>
     <input type="file" id="bam"></input>
+    <br/>
     <label for="bai">BAM index (BAI):</label>
     <input type="file" id="bai"></input>
+    <br/>
     <label for="fa">Fasta (decompressed):</label>
     <input type="file" id="fa"></input>
+    <br/>
     <label for="bam">Fasta index (FAI):</label>
     <input type="file" id="fai"></input>
+    <br/>
     <label for="reg">Region string</label>
     <input type="text" id="reg" />
-    <button onclick="run(1);">Run Pileup</button>
+    <br/>
+    <button  onclick="myrun(1);">Run Pileup</button>
     <div class="progress progress-striped">
         <div id="bamprogress" class="bar" style="width: 0%;"></div>
     </div>
