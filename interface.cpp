@@ -12,6 +12,7 @@ using namespace std;
 extern "C" {
     // JavaScript interface
     int hts_open_js(const string& filename, int fd) {
+        printf("open %s\n",filename.c_str());
         if (htsFiles.find(filename) != htsFiles.end()) return 1;
 
         hFILE* h_f = hopen_js(filename, fd);
@@ -24,8 +25,10 @@ extern "C" {
         emscripten_fetch_attr_t attr;
         emscripten_fetch_attr_init(&attr);
         strcpy(attr.requestMethod, "GET");
+        printf("fetch %s\n",filename.c_str());
         attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_WAITABLE;
-        emscripten_fetch_t *fetch = emscripten_fetch(&attr, "file.dat"); // Starts as asynchronous.
+        emscripten_fetch_t *fetch = emscripten_fetch(&attr, filename.c_str());
+        //filename.c_str()); // Starts as asynchronous.
 
         EMSCRIPTEN_RESULT ret = EMSCRIPTEN_RESULT_TIMED_OUT;
         while(ret == EMSCRIPTEN_RESULT_TIMED_OUT) {

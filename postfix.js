@@ -1,22 +1,22 @@
 
 var htsfiles = {};
 
-function Htsfile(fileobj, progress_callback) {
+function Htsfile(filename, progress_callback) {
     this.reader = {};
     this.offset = 0;
+    this.filename = filename;
     this.cursor = -1;
     this.bufsize = 4194304; // 4 MiB
     this.buf = undefined;
     this.eof = 0;
     this.last_chunk = 0;
-    this.fileobj = fileobj;
     this.progress_callback = progress_callback;
+    console.log('this',this.filename);
 }
 
 Htsfile.prototype._getchunk = function () {
-    console.log('fetchfetch');
-    var hts_fetch_js = cwrap('hts_fetch_js', 'number', ['number', 'string']);
-    if (hts_fetch_js(0,"") == 0) {
+    var hts_fetch_js = cwrap('hts_fetch_js', 'number', ['string']);
+    if (hts_fetch_js(this.filename) == 0) {
         return fd;
     }
     if (this.fileobj.size > this.offset+this.bufsize) {
@@ -112,6 +112,7 @@ function hts_open(filename, progress_callback) {
             break;
     }
     console.log(fd,'wawa');
+    console.log(filename,'wawa2');
 
     htsfiles[fd] = new Htsfile(filename, progress_callback);
 

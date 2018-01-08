@@ -6,3 +6,4 @@ out.js
 htslib/config.h.in*
 a.out.js*
 pileup_bam.js
+fetch-worker.js
