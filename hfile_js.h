@@ -1,9 +1,10 @@
 #include "htslib/hfile.h"
 #include "hfile_internal.h"
+#include <string>
 
 typedef struct {
     hFILE base;
-    char * filename;
+    std::string filename;
 } hFILE_js;
 
-hFILE *hopen_js(int);
+hFILE *hopen_js(const std::string&);

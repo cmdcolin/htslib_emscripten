@@ -15,7 +15,7 @@ extern "C" {
         if (htsFiles.find(filename) != htsFiles.end()) return 1;
 
         hFILE* h_f = hopen_js(filename);
-        htsFile* f = hts_hopen_js(h_f, filename, "r");
+        htsFile* f = hts_hopen_js(h_f, filename.c_str(), "r");
         htsFiles[filename] = f;
 
         return 0;

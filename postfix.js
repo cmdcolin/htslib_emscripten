@@ -111,7 +111,7 @@ function hts_open(filename, progress_callback) {
     console.log('herehrehre');
 
     var hts_open_js = cwrap('hts_open_js', 'number', ['string']);
-    if (hts_open_js(filename, fileobj.name) == 0)
+    if (hts_open_js(filename) == 0)
         return fd;
     else
         throw "Something wrong happened while opening file.";

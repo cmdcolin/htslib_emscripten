@@ -48,7 +48,7 @@ struct __hts_idx_t {
     } z; // keep internal states
 };
 
-htsFile *hts_hopen_js(struct hFILE* hfile, char *fn, const char* mode) {
+htsFile *hts_hopen_js(struct hFILE* hfile, const string& fn, const char* mode) {
     htsFile *fp = (htsFile*)calloc(1, sizeof(htsFile));
     char simple_mode[101], fasta_test;
     const char *cp;
@@ -56,7 +56,7 @@ htsFile *hts_hopen_js(struct hFILE* hfile, char *fn, const char* mode) {
 
     if (fp == NULL) goto error;
 
-    fp->fn = strdup(fn);
+    fp->fn = strdup(fn.c_str());
     fp->is_be = ed_is_big();
 
     // Split mode into simple_modeopts strings
@@ -80,7 +80,7 @@ htsFile *hts_hopen_js(struct hFILE* hfile, char *fn, const char* mode) {
         fp->is_bin = 1;
         break;
     case cram:
-        fp->fp.cram = cram_dopen(hfile, fn, simple_mode);
+        fp->fp.cram = cram_dopen(hfile, fn.c_str(), simple_mode);
         if (fp->fp.cram == NULL) goto error;
         if (!fp->is_write)
             cram_set_option(fp->fp.cram, CRAM_OPT_DECODE_MD, 1);
@@ -112,7 +112,7 @@ htsFile *hts_hopen_js(struct hFILE* hfile, char *fn, const char* mode) {
     return fp;
 
 error:
-    printf("[E::%s] fail to open file '%s'\n", __func__, fn);
+    printf("[E::%s] fail to open file '%s'\n", __func__, fn.c_str());
 
     if (fp) {
         free(fp->fn);
