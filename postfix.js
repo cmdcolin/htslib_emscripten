@@ -127,5 +127,11 @@ function hts_close(fd) {
     Module._hts_close_js(fd);
 }
 
+function run_pileup(fd_bam, fd_bai, fd_fa, fd_fai, reg) {
+    var func = cwrap('run_pileup', 'number', ['number', 'number', 'number', 'number', 'string']);
+    func(fd_bam, fd_bai, fd_fa, fd_fai, reg);
+}
+
 self["hts_open"] = hts_open;
 self["hts_close"] = hts_close;
+self["run_pileup"] = run_pileup;

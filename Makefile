@@ -45,11 +45,15 @@ all:
 		$(HTSLIB_DIR)/knetfile.c \
 		$(HTSLIB_DIR)/faidx.c \
 		$(HTSLIB_DIR)/cram/open_trace_file.c \
-		--pre-js prefix.js \
+        pileup.cpp \
+        interface_js.cpp \
+		interface.cpp \
 		--post-js postfix.js \
 		-s NO_EXIT_RUNTIME=1 \
 		-s FORCE_FILESYSTEM=1 \
-		-s EXPORTED_FUNCTIONS="['_hts_open','_sam_hdr_read','_bam_init1','_sam_read1','_bam_aux_get','_bam_aux2A','_sam_index_load']" \
-		-o js/Store/SeqFeature/CRAM/Htslib.js
+        -s USE_PTHREADS=1 \
+        -s EXPORT_ALL=1 \
+        -s FETCH=1 \
+        -o pileup_bam.js
 
 
