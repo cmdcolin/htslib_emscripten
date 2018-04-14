@@ -21,26 +21,29 @@ extern "C" {
 
         return 0;
     }
+	void downloadSucceeded(emscripten_fetch_t *fetch) {
+	  printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+	  // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+	  emscripten_fetch_close(fetch); // Free data associated with the fetch.
+	}
+
+	void downloadFailed(emscripten_fetch_t *fetch) {
+	  printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+	  emscripten_fetch_close(fetch); // Also free data on failure.
+	}
     int hts_fetch_js(const string& filename) {
-        emscripten_fetch_attr_t attr;
-        emscripten_fetch_attr_init(&attr);
-        strcpy(attr.requestMethod, "GET");
+		emscripten_fetch_attr_t attr;
+		emscripten_fetch_attr_init(&attr);
 
-        attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_WAITABLE;
-        const char * headers[]={"Range", "bytes=1-10000",0};
+		strcpy(attr.requestMethod, "GET");
+
+		const char * headers[]={"Range", "bytes=1-1000",0};
         attr.requestHeaders = headers; // appears to not be implemented yet
-        emscripten_fetch_t *fetch = emscripten_fetch(&attr, filename.c_str());
 
-        EMSCRIPTEN_RESULT ret = EMSCRIPTEN_RESULT_TIMED_OUT;
-        while(ret == EMSCRIPTEN_RESULT_TIMED_OUT) {
-            ret = emscripten_fetch_wait(fetch, 10);
-        }
-        if (fetch->status == 200) {
-            printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
-        } else {
-            printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
-        }
-        emscripten_fetch_close(fetch);
+		attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+        attr.onsuccess = downloadSucceeded;
+        attr.onerror = downloadFailed;
+		emscripten_fetch_t *fetch = emscripten_fetch(&attr, "volvox-sorted.bam"); // Blocks here until the operation is complete.
         return -1;
     }
 

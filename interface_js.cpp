@@ -19,6 +19,7 @@ extern "C" {
         hts_idx_t *bai;
 
         bai = hts_idx_load_js(htsFiles[fd_bai]);
+        printf("run_pileup cpp\n");
 
         pileup(htsFiles[fd_bam], bai, reg.c_str(), callback_pileup);
 

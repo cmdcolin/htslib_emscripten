@@ -1,24 +1,20 @@
 <html>
 <head>
-    <script src="pileup_bam.js"></script>
+<script src="pileup_bam.js"></script>
 <script>
 
-function myrun() {
-    console.log('run');
+function myrun(cmd) {
     var bam = "volvox-sorted.bam";
     var bai = "volvox-sorted.bam.bai";
-
-
-    fd_bam = hts_open(bam, function() {
-        console.log('here progress');
+    var fd_bam = hts_open(bam, function() {
+        console.log('took');
     });
-    fd_bai = hts_open(bai, function() {
-        console.log('here progress2');
-    });
+    var fd_bai = hts_open(bai);
     run_pileup(fd_bam, fd_bai, "ctgA:1-1000");
     hts_close(fd_bam); 
-    hts_close(fd_bai); 
+    hts_close(fd_bai);
 }
+
 setTimeout(myrun,1000);
 </script>
 </head>
